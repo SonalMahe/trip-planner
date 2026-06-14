@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#f1f5f9" />
+  <title>Trip Planner · Belgium &amp; Luxembourg</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/lucide-react@0.460.0/dist/umd/lucide-react.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    .font-display { font-family: 'Space Grotesk', sans-serif; }
+    .font-body    { font-family: 'IBM Plex Sans', sans-serif; }
+    .font-mono    { font-family: 'IBM Plex Mono', monospace; }
+    body {
+      padding-top:    env(safe-area-inset-top);
+      padding-right:  env(safe-area-inset-right);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left:   env(safe-area-inset-left);
+    }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback } = React;
+    const { ChevronLeft, ChevronDown, ChevronUp, Check, X, RotateCcw, MapPin, Wallet, ExternalLink } = LucideReact;
+
+    /* ----------------------------- DATA ----------------------------- */
+
+    const CITIES = {
+      antwerp: {
+        name: "Antwerp",
+        parking: "Parking Brabo · Kammenstraat 2 · €3.10/h, max €22/day · open 07:00–02:00",
+        itinerary:
+          "Park at Brabo → Grote Markt → Cathedral → Het Steen → riverside walk to MAS → Stripmuren back → Botanic Garden. ~2-2.5h walking, all free spots in one loop.",
+        places: [
+          { id: "ant-mas",        name: "MAS – Museum aan de Stroom",      time: "1.5-2h",      price: 0,  desc: "Free rooftop panorama + free permanent collection; iconic red building." },
+          { id: "ant-grote-markt",name: "Grote Markt",                     time: "30 min",      price: 0,  desc: "Historic square with guildhalls and the Brabo fountain." },
+          { id: "ant-botanic",    name: "Botanic Garden (Plantentuin)",    time: "30-45 min",   price: 0,  desc: "Quiet oasis with ducks, deer and goats." },
+          { id: "ant-stripmuren", name: "Stripmuren (Comic Murals)",       time: "1-2h",        price: 0,  desc: "13 comic-mural sites — a walking scavenger hunt." },
+          { id: "ant-het-steen",  name: "Het Steen",                       time: "30-60 min",   price: 0,  desc: "Medieval castle exterior with riverside roof terrace." },
+          { id: "ant-anna-tunnel",name: "St. Anna's Tunnel",               time: "20-30 min",   price: 0,  desc: "1933 wooden escalators under the Scheldt — kids love it." },
+          { id: "ant-cathedral",  name: "Cathedral of Our Lady",           time: "30-45 min",   price: 6,  desc: "Gothic cathedral with four Rubens masterpieces." },
+          { id: "ant-diamond",    name: "DIVA Diamond Museum",             time: "1h",          price: 11, desc: "Diamond-cutting demos — engaging for kids." },
+          { id: "ant-redstar",    name: "Red Star Line Museum",            time: "1-1.5h",      price: 10, desc: "Migration-history museum with personal stories." },
+          { id: "ant-kmska",      name: "KMSKA – Royal Museum of Fine Arts",time: "1.5-2h",     price: 12, desc: "Recently renovated, centuries of Flemish art." },
+          { id: "ant-rubenshuis", name: "Rubenshuis",                      time: "1-1.5h",      price: 14, desc: "Rubens' home & studio with new wing + Baroque garden." },
+          { id: "ant-choco",      name: "Chocolate Nation",                time: "45-60 min",   price: 18, desc: "World's largest Belgian chocolate museum, incl. tastings." },
+          { id: "ant-zoo",        name: "Antwerp Zoo",                     time: "3-4h",        price: 29, desc: "950+ species; arrive 10:00, penguin feeding 14:30." },
+        ],
+      },
+      bruges: {
+        name: "Bruges",
+        parking: "City centre is largely pedestrian — best options are 't Zand or Station car parks (verify rates on arrival).",
+        itinerary:
+          "Everything fits a ~20-min walking radius: Markt → Burg/Holy Blood → Beguinage → Minnewater → Windmills loop back.",
+        places: [
+          { id: "bru-markt",          name: "Markt (Market Square)",             time: "30-45 min",   price: 0,  desc: "Heart of Bruges, guild houses and the Belfry tower." },
+          { id: "bru-burg",           name: "Burg Square",                       time: "20-30 min",   price: 0,  desc: "Ornate square next to the Markt, historic city hall." },
+          { id: "bru-holyblood",      name: "Basilica of the Holy Blood (entry)",time: "20-30 min",   price: 0,  desc: "12th-century chapel, free to step inside." },
+          { id: "bru-beguinage",      name: "Beguinage (Begijnhof)",             time: "30-45 min",   price: 0,  desc: "Tranquil UNESCO courtyard, swans and whitewashed houses." },
+          { id: "bru-minnewater",     name: "Minnewater Park (Lake of Love)",    time: "30-60 min",   price: 0,  desc: "Picnic spot with swans — kids love feeding them." },
+          { id: "bru-windmills",      name: "Windmills & Ramparts walk",         time: "45-60 min",   price: 0,  desc: "Scenic walk past historic windmills, room to run." },
+          { id: "bru-zand-market",    name: "'t Zand Saturday Market",           time: "30-45 min",   price: 0,  desc: "Local market — produce, cheese, crafts (Saturdays only)." },
+          { id: "bru-canals",         name: "Canal-side wandering",              time: "flexible",    price: 0,  desc: "Bruges is built for getting lost — every corner is a postcard." },
+          { id: "bru-church-our-lady",name: "Church of Our Lady",                time: "30 min",      price: 6,  desc: "Houses Michelangelo's Madonna sculpture." },
+          { id: "bru-boat",           name: "Canal Boat Tour",                   time: "30 min",      price: 12, desc: "Short, kid-friendly ride through the canals." },
+          { id: "bru-frietmuseum",    name: "Frietmuseum",                       time: "1h",          price: 12, desc: "Quirky museum dedicated to Belgian fries." },
+          { id: "bru-chocostory",     name: "Choco-Story Museum",                time: "1-1.5h",      price: 13, desc: "Chocolate history with a praline demo." },
+          { id: "bru-belfry",         name: "Belfry of Bruges",                  time: "45-60 min",   price: 14, desc: "366 steps for a panoramic UNESCO-tower view." },
+          { id: "bru-halve-maan",     name: "De Halve Maan Brewery Tour",        time: "1h",          price: 16, desc: "Working city-centre brewery, book ahead." },
+          { id: "bru-historium",      name: "Historium Bruges",                  time: "1-1.5h",      price: 17, desc: "Step into Bruges' medieval Golden Age." },
+          { id: "bru-seapark",        name: "Boudewijn Seapark",                 time: "half-full day",price: 30, desc: "Rides + waterpark; mixed reviews on price/upkeep." },
+        ],
+      },
+      ghent: {
+        name: "Ghent",
+        parking: "Recommend Reep or Vrijdagmarkt garages near the centre (verify current rates on arrival).",
+        itinerary:
+          "Compact ~15-20 min loop: Gravensteen → Graslei/Korenlei → St. Michael's Bridge → St. Nicholas → Graffiti Street → Belfry.",
+        places: [
+          { id: "ghe-korenlei",   name: "Korenlei & Graslei",                  time: "30-45 min",  price: 0,    desc: "Postcard riverside streets along the Leie." },
+          { id: "ghe-stmichaels", name: "St. Michael's Bridge",                time: "15-20 min",  price: 0,    desc: "Iconic view of the three towers — best at sunset." },
+          { id: "ghe-graffiti",   name: "Werregarenstraat (Graffiti Street)",  time: "15-30 min",  price: 0,    desc: "Legal graffiti alley — kids can spray their own mark." },
+          { id: "ghe-stnicholas", name: "St. Nicholas' Cathedral",             time: "20-30 min",  price: 0,    desc: "13th-century church; cafe with kids' play area next door." },
+          { id: "ghe-stbavo",     name: "St. Bavo's Cathedral (nave)",         time: "30 min",     price: 0,    desc: "Free entry to the main Gothic cathedral." },
+          { id: "ghe-blaarmeersen",name: "Blaarmeersen Recreation Area",       time: "half day",   price: 0,    desc: "Lake, beach and play areas, free to enter." },
+          { id: "ghe-wander",     name: "City wandering (Fosfar Dragon app)",  time: "flexible",   price: 0,    desc: "Free app turns the old town into a kids' game." },
+          { id: "ghe-boat",       name: "Boat Tour (medieval Ghent)",          time: "30-45 min",  price: 10,   desc: "See the old town from the water." },
+          { id: "ghe-altarpiece", name: "Ghent Altarpiece (Mystic Lamb)",      time: "30-60 min",  price: 12.5, desc: "Van Eyck's masterpiece; kids' AR tour available (6-10y)." },
+          { id: "ghe-design",     name: "Design Museum Ghent",                 time: "1-1.5h",     price: 12,   desc: "Hands-on for kids — Lego corner, Playmobil hunt (verify reopened)." },
+          { id: "ghe-stam",       name: "STAM (City Museum)",                  time: "1-1.5h",     price: 13,   desc: "Interactive history — walk-on aerial city map, Lego corner." },
+          { id: "ghe-belfry",     name: "Belfry of Ghent",                     time: "45-60 min",  price: 13,   desc: "Panoramic tower views over the old town." },
+          { id: "ghe-gravensteen",name: "Gravensteen Castle",                  time: "1.5-2h",     price: 14,   desc: "Europe's only city-centre medieval castle; audio guide 9+." },
+        ],
+      },
+      brussels: {
+        name: "Brussels",
+        parking:
+          "Grand-Place garage €14.90/day · Heysel (Atomium/LEGO) Parking T/B/M €12/day flat. EV always allowed in LEZ — no day pass needed.",
+        itinerary:
+          "Morning: free city-centre loop (Manneken Pis → Grand-Place → Palace/Park → Comic Route). Afternoon: drive/metro to Heysel for Atomium + Mini Europe + LEGO.",
+        places: [
+          { id: "brx-manneken",       name: "Manneken Pis",                          time: "10-15 min",  price: 0,  desc: "Famous tiny statue, often dressed in costume." },
+          { id: "brx-grandplace",     name: "Grand-Place",                           time: "30-45 min",  price: 0,  desc: "Brussels' opulent central square." },
+          { id: "brx-palace",         name: "Royal Palace exterior + Brussels Park", time: "45-60 min",  price: 0,  desc: "Grand façade, gardens, fountains, benches." },
+          { id: "brx-marcsleen",      name: "Marc Sleen Museum",                     time: "30-45 min",  price: 0,  desc: "Free Flemish comic museum (Mon-Fri 9-5)." },
+          { id: "brx-comicroute",     name: "Comic Strip Route",                     time: "1-2h",       price: 0,  desc: "City-wide mural walk — Tintin & friends." },
+          { id: "brx-cinquantenaire", name: "Parc du Cinquantenaire",                time: "45-60 min",  price: 0,  desc: "Big green park with a triumphal arch." },
+          { id: "brx-chocostory",     name: "Choco Story Brussels",                  time: "1-1.5h",     price: 12, desc: "Cocoa & chocolate history museum." },
+          { id: "brx-autoworld",      name: "Autoworld",                             time: "2-3h",       price: 13, desc: "300+ vintage cars in Cinquantenaire park." },
+          { id: "brx-atomium",        name: "Atomium",                               time: "1.5-2h",     price: 16, desc: "Iconic 1958 structure with city-view spheres." },
+          { id: "brx-minieurope",     name: "Mini Europe",                           time: "2-3h",       price: 16, desc: "Miniature European landmarks with moving parts." },
+          { id: "brx-lego",           name: "LEGO Discovery Centre",                 time: "2h",         price: 20, desc: "Build zones, 4D cinema — great rainy-day pick." },
+        ],
+      },
+      dinant: {
+        name: "Dinant",
+        parking: "Free parking at the top of the Citadel — drive straight up (cable car currently closed).",
+        itinerary:
+          "Town centre (Notre Dame, bridge, riverside) → drive up to Citadel (free parking) → playground + AR tour → optional boat ride.",
+        places: [
+          { id: "din-notredame",    name: "Notre Dame de Dinant",       time: "20-30 min",  price: 0,  desc: "13th-century Gothic church below the citadel." },
+          { id: "din-bridge",       name: "Charles de Gaulle Bridge",   time: "10-15 min",  price: 0,  desc: "Best photo spot for the citadel + church view." },
+          { id: "din-riverside",    name: "Riverside walk (Meuse)",     time: "30-45 min",  price: 0,  desc: "Easy flat walk, room for kids to run." },
+          { id: "din-citadel-view", name: "Citadel exterior view",      time: "15-20 min",  price: 0,  desc: "Dramatic clifftop fortress view from the town." },
+          { id: "din-citadel",      name: "Citadel of Dinant",          time: "1.5h",       price: 14, desc: "1,000 yrs of history + HistoPad AR tour + playground (cable car closed — drive up)." },
+          { id: "din-boat",         name: "Boat Tour on the Meuse",     time: "45-60 min",  price: 11, desc: "River views of the citadel from below." },
+        ],
+      },
+      luxembourg: {
+        name: "Luxembourg",
+        parking:
+          "Saint Esprit parking hall, next to Chemin de la Corniche — €9/day (Sunday rate; check weekday price). Real-time availability on the city tourist site.",
+        itinerary:
+          "Park at Saint Esprit → Corniche walk → Old Town (upper+lower) → Bock Casemates → Place de Paris → Pétrusse Valley/playground.",
+        places: [
+          { id: "lux-corniche",       name: "Chemin de la Corniche",             time: "30-45 min",  price: 0,  desc: "\"Europe's most beautiful balcony\" — valley views." },
+          { id: "lux-oldtown",        name: "Old Town (Upper & Lower)",           time: "1-2h",       price: 0,  desc: "UNESCO old town, steep streets + free elevator." },
+          { id: "lux-grund",          name: "Grund (lower town)",                 time: "30-45 min",  price: 0,  desc: "Picturesque riverside district below the cliffs." },
+          { id: "lux-petrusse",       name: "Pétrusse Valley",                   time: "45-60 min",  price: 0,  desc: "Walking paths and playgrounds in a green valley." },
+          { id: "lux-kinnekswiss",    name: "Kinnekswiss Playground",             time: "30-45 min",  price: 0,  desc: "Popular green-space playground for kids." },
+          { id: "lux-placedeparis",   name: "Place de Paris",                     time: "15-20 min",  price: 0,  desc: "Quirky square with statues and street art." },
+          { id: "lux-walkingtour",    name: "Free Walking Tour",                  time: "~2h",        price: 0,  desc: "Local guides share legends and history." },
+          { id: "lux-naturalhistory", name: "National Museum of Natural History", time: "1.5-2h",     price: 5,  desc: "Engaging exhibits for kids." },
+          { id: "lux-casemates",      name: "Bock Casemates",                     time: "1-1.5h",     price: 10, desc: "UNESCO underground tunnels, best spring/autumn." },
+          { id: "lux-ducalpalace",    name: "Grand Ducal Palace Tour",            time: "45-60 min",  price: 10, desc: "Summer-only guided tour (18 Jul–30 Aug 2026)." },
+          { id: "lux-citypromenade",  name: "City Promenade for Kids",            time: "2h",         price: 15, desc: "Kid-tailored tour — Melusina legend + souvenir gift." },
+        ],
+      },
+    };
+
+    const CITY_KEYS = Object.keys(CITIES);
+
+    function sortPlaces(places) {
+      return [...places].sort((a, b) => a.price - b.price);
+    }
+
+    const fmtPrice = (p) => (p === 0 ? "Free" : `€${p % 1 === 0 ? p : p.toFixed(2)}`);
+
+    /* ----------------------------- APP ----------------------------- */
+
+    function TripPlanner() {
+      const [view, setView] = useState("home");
+      const [skipped, setSkipped] = useState({});
+      const [visited, setVisited] = useState({});
+      const [openSection, setOpenSection] = useState({});
+      const [loaded, setLoaded] = useState(false);
+
+      useEffect(() => {
+        const sk = {};
+        const vi = {};
+        for (const key of CITY_KEYS) {
+          try {
+            const val = localStorage.getItem(`skipped:${key}`);
+            sk[key] = new Set(val ? JSON.parse(val) : []);
+          } catch {
+            sk[key] = new Set();
+          }
+          try {
+            const val = localStorage.getItem(`visited:${key}`);
+            vi[key] = new Set(val ? JSON.parse(val) : []);
+          } catch {
+            vi[key] = new Set();
+          }
+        }
+        setSkipped(sk);
+        setVisited(vi);
+        setLoaded(true);
+      }, []);
+
+      const persist = useCallback((kind, cityKey, set) => {
+        try {
+          localStorage.setItem(`${kind}:${cityKey}`, JSON.stringify([...set]));
+        } catch {
+          // best-effort; ignore failures (e.g. private browsing storage full)
+        }
+      }, []);
+
+      const toggleSkip = (cityKey, placeId) => {
+        setSkipped((prev) => {
+          const next = { ...prev };
+          const s = new Set(next[cityKey] || []);
+          if (s.has(placeId)) s.delete(placeId); else s.add(placeId);
+          next[cityKey] = s;
+          persist("skipped", cityKey, s);
+          return next;
+        });
+      };
+
+      const toggleVisited = (cityKey, placeId) => {
+        setVisited((prev) => {
+          const next = { ...prev };
+          const s = new Set(next[cityKey] || []);
+          if (s.has(placeId)) s.delete(placeId); else s.add(placeId);
+          next[cityKey] = s;
+          persist("visited", cityKey, s);
+          return next;
+        });
+      };
+
+      const restoreAll = (cityKey) => {
+        setSkipped((prev) => {
+          const next = { ...prev, [cityKey]: new Set() };
+          persist("skipped", cityKey, next[cityKey]);
+          return next;
+        });
+      };
+
+      const toggleSection = (cityKey, section) => {
+        setOpenSection((prev) => ({
+          ...prev,
+          [cityKey]: { ...prev[cityKey], [section]: !prev[cityKey]?.[section] },
+        }));
+      };
+
+      const cityCost = (cityKey) => {
+        const sk = skipped[cityKey] || new Set();
+        return CITIES[cityKey].places
+          .filter((p) => p.price > 0 && !sk.has(p.id))
+          .reduce((sum, p) => sum + p.price, 0);
+      };
+
+      const cityCounts = (cityKey) => {
+        const sk = skipped[cityKey] || new Set();
+        const remaining = CITIES[cityKey].places.filter((p) => !sk.has(p.id));
+        return {
+          free: remaining.filter((p) => p.price === 0).length,
+          paid: remaining.filter((p) => p.price > 0).length,
+        };
+      };
+
+      const tripTotal = CITY_KEYS.reduce((sum, k) => sum + cityCost(k), 0);
+
+      if (!loaded) {
+        return (
+          <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+            <p className="text-slate-500 font-mono text-sm">loading route…</p>
+          </div>
+        );
+      }
+
+      return (
+        <div className="min-h-screen bg-slate-100 text-slate-900">
+          <div className="max-w-md mx-auto px-4 pb-16">
+            {view === "home" ? (
+              <HomeScreen
+                onSelect={setView}
+                tripTotal={tripTotal}
+                cityCost={cityCost}
+                cityCounts={cityCounts}
+              />
+            ) : (
+              <CityScreen
+                cityKey={view}
+                onBack={() => setView("home")}
+                skipped={skipped[view] || new Set()}
+                visited={visited[view] || new Set()}
+                onToggleSkip={(id) => toggleSkip(view, id)}
+                onToggleVisited={(id) => toggleVisited(view, id)}
+                onRestoreAll={() => restoreAll(view)}
+                cost={cityCost(view)}
+                openSection={openSection[view] || {}}
+                onToggleSection={(s) => toggleSection(view, s)}
+              />
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    /* ----------------------------- HOME ----------------------------- */
+
+    function HomeScreen({ onSelect, tripTotal, cityCost, cityCounts }) {
+      return (
+        <div className="pt-8">
+          <h1 className="font-display text-3xl font-bold tracking-tight">Route Planner</h1>
+          <p className="font-mono text-xs text-slate-500 mt-1 mb-6">
+            Belgium &amp; Luxembourg · June 2026
+          </p>
+
+          <div className="flex items-center gap-2 mb-6 px-3 py-2 rounded-md bg-white border border-slate-200">
+            <Wallet size={16} className="text-amber-700 shrink-0" />
+            <span className="font-body text-sm text-slate-500">
+              Planned spend across all stops
+            </span>
+            <span className="font-mono text-sm font-medium ml-auto">€{tripTotal.toFixed(2)}</span>
+          </div>
+
+          <div className="space-y-3">
+            {CITY_KEYS.map((key) => {
+              const { free, paid } = cityCounts(key);
+              const cost = cityCost(key);
+              return (
+                <button
+                  key={key}
+                  onClick={() => onSelect(key)}
+                  className="w-full text-left bg-white border border-slate-200 rounded-lg px-4 py-3 hover:border-emerald-600/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-display text-lg font-bold">{CITIES[key].name}</span>
+                    <span className="font-mono text-sm text-amber-700">€{cost.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center gap-3 font-mono text-xs text-slate-500">
+                    <span className="flex items-center gap-1.5">
+                      <span className="inline-block w-2.5 h-2.5 rounded-full border-2 border-emerald-600" />
+                      {free} free
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-600" />
+                      {paid} paid
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <p className="font-body text-xs text-slate-500 mt-6 text-center">
+            Tap a city to see the route. Skip places you don't want — your choices are saved.
+          </p>
+        </div>
+      );
+    }
+
+    /* ----------------------------- CITY SCREEN ----------------------------- */
+
+    function CityScreen({
+      cityKey, onBack, skipped, visited,
+      onToggleSkip, onToggleVisited, onRestoreAll,
+      cost, openSection, onToggleSection,
+    }) {
+      const city = CITIES[cityKey];
+      const allPlaces = sortPlaces(city.places);
+      const activePlaces = allPlaces.filter((p) => !skipped.has(p.id));
+      const skippedPlaces = allPlaces.filter((p) => skipped.has(p.id));
+
+      return (
+        <div className="pt-6">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1 text-slate-500 hover:text-slate-900 font-body text-sm mb-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded"
+          >
+            <ChevronLeft size={16} /> All cities
+          </button>
+
+          <h1 className="font-display text-2xl font-bold mb-4">{city.name}</h1>
+
+          <CollapsibleSection
+            title="Trip notes"
+            icon={<MapPin size={14} className="text-red-600" />}
+            open={!!openSection.notes}
+            onToggle={() => onToggleSection("notes")}
+          >
+            <div className="space-y-2 font-body text-sm text-slate-700">
+              <p>
+                <span className="font-mono text-xs text-slate-500 block mb-0.5">PARKING</span>
+                {city.parking}
+              </p>
+              <p>
+                <span className="font-mono text-xs text-slate-500 block mb-0.5">SUGGESTED ROUTE</span>
+                {city.itinerary}
+              </p>
+            </div>
+          </CollapsibleSection>
+
+          <div className="flex items-center gap-2 my-4 px-3 py-2 rounded-md bg-white border border-slate-200">
+            <Wallet size={16} className="text-amber-700 shrink-0" />
+            <span className="font-body text-sm text-slate-500">Estimated cost (kept stops)</span>
+            <span className="font-mono text-sm font-medium ml-auto">€{cost.toFixed(2)}</span>
+          </div>
+
+          <div className="mt-2">
+            {activePlaces.length === 0 ? (
+              <p className="font-body text-sm text-slate-500 italic py-4 text-center">
+                All stops skipped. Restore some below to plan your route.
+              </p>
+            ) : (
+              activePlaces.map((place, idx) => (
+                <PlaceNode
+                  key={place.id}
+                  place={place}
+                  cityName={city.name}
+                  isLast={idx === activePlaces.length - 1}
+                  isVisited={visited.has(place.id)}
+                  onToggleVisited={() => onToggleVisited(place.id)}
+                  onSkip={() => onToggleSkip(place.id)}
+                />
+              ))
+            )}
+          </div>
+
+          {skippedPlaces.length > 0 && (
+            <CollapsibleSection
+              title={`Skipped (${skippedPlaces.length})`}
+              icon={<X size={14} className="text-slate-500" />}
+              open={!!openSection.skipped}
+              onToggle={() => onToggleSection("skipped")}
+              extra={
+                <button
+                  onClick={onRestoreAll}
+                  className="font-mono text-xs text-emerald-700 hover:underline focus:outline-none"
+                >
+                  restore all
+                </button>
+              }
+            >
+              <div className="space-y-2">
+                {skippedPlaces.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between gap-2 py-1.5 px-2 rounded bg-slate-100"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-body text-sm text-slate-500 truncate">{p.name}</p>
+                      <p className="font-mono text-xs text-slate-400">
+                        {fmtPrice(p.price)} · {p.time}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => onToggleSkip(p.id)}
+                      aria-label={`Add ${p.name} back to route`}
+                      className="shrink-0 p-1.5 rounded-full border border-slate-200 text-emerald-700 hover:bg-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                    >
+                      <RotateCcw size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleSection>
+          )}
+        </div>
+      );
+    }
+
+    /* ----------------------------- PLACE NODE ----------------------------- */
+
+    function PlaceNode({ place, cityName, isLast, isVisited, onToggleVisited, onSkip }) {
+      const [expanded, setExpanded] = useState(false);
+      const isFree = place.price === 0;
+      const mapsUrl =
+        "https://www.google.com/maps/search/?api=1&query=" +
+        encodeURIComponent(`${place.name}, ${cityName}`);
+
+      return (
+        <div className="relative pl-9">
+          {!isLast && (
+            <div className="absolute left-[7px] top-5 bottom-[-4px] w-px bg-slate-300" aria-hidden="true" />
+          )}
+          <div
+            className={`absolute left-0 top-1.5 w-4 h-4 rounded-full border-2 ${
+              isFree ? "border-emerald-600 bg-transparent" : "border-amber-600 bg-amber-600"
+            }`}
+            aria-hidden="true"
+          />
+          <div
+            className={`mb-3 rounded-lg border transition-opacity ${
+              isVisited ? "opacity-60 border-slate-200 bg-slate-100" : "border-slate-200 bg-white"
+            }`}
+          >
+            <button
+              onClick={() => setExpanded((v) => !v)}
+              aria-expanded={expanded}
+              className="w-full text-left px-3 py-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-lg"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="font-body font-medium text-sm leading-snug text-slate-900">
+                  {place.name}
+                </h3>
+                <span className={`font-mono text-xs shrink-0 ${isFree ? "text-emerald-700" : "text-amber-700"}`}>
+                  {fmtPrice(place.price)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between mt-0.5">
+                <p className="font-mono text-xs text-slate-500">{place.time}</p>
+                <span className="flex items-center gap-1 font-mono text-[11px] text-slate-400">
+                  {isVisited && <Check size={11} className="text-emerald-600" />}
+                  {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                </span>
+              </div>
+            </button>
+
+            {expanded && (
+              <div className="px-3 pb-3 pt-1 border-t border-slate-100">
+                <p className="font-body text-sm text-slate-700 leading-relaxed mb-3">{place.desc}</p>
+
+                <a
+                  href={mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-1.5 w-full font-mono text-xs px-2 py-2 rounded border border-slate-300 text-slate-700 hover:bg-slate-100 hover:border-slate-400 mb-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                >
+                  <MapPin size={13} className="text-red-600" /> Open in Google Maps
+                  <ExternalLink size={11} className="text-slate-400" />
+                </a>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={onToggleVisited}
+                    aria-pressed={isVisited}
+                    className={`flex items-center gap-1 font-mono text-xs px-2 py-1 rounded border focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+                      isVisited
+                        ? "border-emerald-600 text-emerald-700 bg-emerald-50"
+                        : "border-slate-200 text-slate-500 hover:border-emerald-600/50"
+                    }`}
+                  >
+                    <Check size={12} /> {isVisited ? "Done" : "Mark done"}
+                  </button>
+                  <button
+                    onClick={onSkip}
+                    className="flex items-center gap-1 font-mono text-xs px-2 py-1 rounded border border-slate-200 text-slate-500 hover:border-red-400 hover:text-red-600 ml-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                  >
+                    <X size={12} /> Skip
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    /* ----------------------------- COLLAPSIBLE ----------------------------- */
+
+    function CollapsibleSection({ title, icon, open, onToggle, extra, children }) {
+      return (
+        <div className="border border-slate-200 rounded-lg overflow-hidden mb-3">
+          <button
+            onClick={onToggle}
+            className="w-full flex items-center gap-2 px-3 py-2.5 bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-inset"
+          >
+            {icon}
+            <span className="font-mono text-xs uppercase tracking-wide text-slate-700">{title}</span>
+            <span className="ml-auto flex items-center gap-2">
+              {extra}
+              {open ? <ChevronUp size={14} className="text-slate-500" /> : <ChevronDown size={14} className="text-slate-500" />}
+            </span>
+          </button>
+          {open && <div className="px-3 py-3 bg-slate-50">{children}</div>}
+        </div>
+      );
+    }
+
+    /* ----------------------------- MOUNT ----------------------------- */
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<TripPlanner />);
+  </script>
+</body>
+</html>
