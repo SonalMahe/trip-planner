@@ -15,7 +15,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/lucide-react@0.460.0/dist/umd/lucide-react.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
@@ -35,7 +34,35 @@
 
   <script type="text/babel">
     const { useState, useEffect, useCallback } = React;
-    const { ChevronLeft, ChevronDown, ChevronUp, Check, X, RotateCcw, MapPin, Wallet, ExternalLink } = LucideReact;
+
+    /* ----------------------------- ICONS ----------------------------- */
+
+    function Icon({ size = 24, className = "", children }) {
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width={size} height={size}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+          aria-hidden="true"
+        >{children}</svg>
+      );
+    }
+
+    const ChevronLeft  = (p) => <Icon {...p}><path d="m15 18-6-6 6-6"/></Icon>;
+    const ChevronDown  = (p) => <Icon {...p}><path d="m6 9 6 6 6-6"/></Icon>;
+    const ChevronUp    = (p) => <Icon {...p}><path d="m18 15-6-6-6 6"/></Icon>;
+    const Check        = (p) => <Icon {...p}><path d="M20 6 9 17 4 12"/></Icon>;
+    const XIcon        = (p) => <Icon {...p}><path d="M18 6 6 18"/><path d="M6 6l12 12"/></Icon>;
+    const RotateCcw    = (p) => <Icon {...p}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></Icon>;
+    const MapPin       = (p) => <Icon {...p}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></Icon>;
+    const Wallet       = (p) => <Icon {...p}><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></Icon>;
+    const ExternalLink = (p) => <Icon {...p}><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></Icon>;
 
     /* ----------------------------- DATA ----------------------------- */
 
@@ -46,19 +73,19 @@
         itinerary:
           "Park at Brabo → Grote Markt → Cathedral → Het Steen → riverside walk to MAS → Stripmuren back → Botanic Garden. ~2-2.5h walking, all free spots in one loop.",
         places: [
-          { id: "ant-mas",        name: "MAS – Museum aan de Stroom",      time: "1.5-2h",      price: 0,  desc: "Free rooftop panorama + free permanent collection; iconic red building." },
-          { id: "ant-grote-markt",name: "Grote Markt",                     time: "30 min",      price: 0,  desc: "Historic square with guildhalls and the Brabo fountain." },
-          { id: "ant-botanic",    name: "Botanic Garden (Plantentuin)",    time: "30-45 min",   price: 0,  desc: "Quiet oasis with ducks, deer and goats." },
-          { id: "ant-stripmuren", name: "Stripmuren (Comic Murals)",       time: "1-2h",        price: 0,  desc: "13 comic-mural sites — a walking scavenger hunt." },
-          { id: "ant-het-steen",  name: "Het Steen",                       time: "30-60 min",   price: 0,  desc: "Medieval castle exterior with riverside roof terrace." },
-          { id: "ant-anna-tunnel",name: "St. Anna's Tunnel",               time: "20-30 min",   price: 0,  desc: "1933 wooden escalators under the Scheldt — kids love it." },
-          { id: "ant-cathedral",  name: "Cathedral of Our Lady",           time: "30-45 min",   price: 6,  desc: "Gothic cathedral with four Rubens masterpieces." },
-          { id: "ant-diamond",    name: "DIVA Diamond Museum",             time: "1h",          price: 11, desc: "Diamond-cutting demos — engaging for kids." },
-          { id: "ant-redstar",    name: "Red Star Line Museum",            time: "1-1.5h",      price: 10, desc: "Migration-history museum with personal stories." },
-          { id: "ant-kmska",      name: "KMSKA – Royal Museum of Fine Arts",time: "1.5-2h",     price: 12, desc: "Recently renovated, centuries of Flemish art." },
-          { id: "ant-rubenshuis", name: "Rubenshuis",                      time: "1-1.5h",      price: 14, desc: "Rubens' home & studio with new wing + Baroque garden." },
-          { id: "ant-choco",      name: "Chocolate Nation",                time: "45-60 min",   price: 18, desc: "World's largest Belgian chocolate museum, incl. tastings." },
-          { id: "ant-zoo",        name: "Antwerp Zoo",                     time: "3-4h",        price: 29, desc: "950+ species; arrive 10:00, penguin feeding 14:30." },
+          { id: "ant-mas",         name: "MAS – Museum aan de Stroom",       time: "1.5-2h",       price: 0,  desc: "Free rooftop panorama + free permanent collection; iconic red building." },
+          { id: "ant-grote-markt", name: "Grote Markt",                      time: "30 min",       price: 0,  desc: "Historic square with guildhalls and the Brabo fountain." },
+          { id: "ant-botanic",     name: "Botanic Garden (Plantentuin)",     time: "30-45 min",    price: 0,  desc: "Quiet oasis with ducks, deer and goats." },
+          { id: "ant-stripmuren",  name: "Stripmuren (Comic Murals)",        time: "1-2h",         price: 0,  desc: "13 comic-mural sites — a walking scavenger hunt." },
+          { id: "ant-het-steen",   name: "Het Steen",                        time: "30-60 min",    price: 0,  desc: "Medieval castle exterior with riverside roof terrace." },
+          { id: "ant-anna-tunnel", name: "St. Anna's Tunnel",                time: "20-30 min",    price: 0,  desc: "1933 wooden escalators under the Scheldt — kids love it." },
+          { id: "ant-cathedral",   name: "Cathedral of Our Lady",            time: "30-45 min",    price: 6,  desc: "Gothic cathedral with four Rubens masterpieces." },
+          { id: "ant-diamond",     name: "DIVA Diamond Museum",              time: "1h",           price: 11, desc: "Diamond-cutting demos — engaging for kids." },
+          { id: "ant-redstar",     name: "Red Star Line Museum",             time: "1-1.5h",       price: 10, desc: "Migration-history museum with personal stories." },
+          { id: "ant-kmska",       name: "KMSKA – Royal Museum of Fine Arts", time: "1.5-2h",  price: 12, desc: "Recently renovated, centuries of Flemish art." },
+          { id: "ant-rubenshuis",  name: "Rubenshuis",                       time: "1-1.5h",       price: 14, desc: "Rubens' home & studio with new wing + Baroque garden." },
+          { id: "ant-choco",       name: "Chocolate Nation",                 time: "45-60 min",    price: 18, desc: "World's largest Belgian chocolate museum, incl. tastings." },
+          { id: "ant-zoo",         name: "Antwerp Zoo",                      time: "3-4h",         price: 29, desc: "950+ species; arrive 10:00, penguin feeding 14:30." },
         ],
       },
       bruges: {
@@ -67,22 +94,22 @@
         itinerary:
           "Everything fits a ~20-min walking radius: Markt → Burg/Holy Blood → Beguinage → Minnewater → Windmills loop back.",
         places: [
-          { id: "bru-markt",          name: "Markt (Market Square)",             time: "30-45 min",   price: 0,  desc: "Heart of Bruges, guild houses and the Belfry tower." },
-          { id: "bru-burg",           name: "Burg Square",                       time: "20-30 min",   price: 0,  desc: "Ornate square next to the Markt, historic city hall." },
-          { id: "bru-holyblood",      name: "Basilica of the Holy Blood (entry)",time: "20-30 min",   price: 0,  desc: "12th-century chapel, free to step inside." },
-          { id: "bru-beguinage",      name: "Beguinage (Begijnhof)",             time: "30-45 min",   price: 0,  desc: "Tranquil UNESCO courtyard, swans and whitewashed houses." },
-          { id: "bru-minnewater",     name: "Minnewater Park (Lake of Love)",    time: "30-60 min",   price: 0,  desc: "Picnic spot with swans — kids love feeding them." },
-          { id: "bru-windmills",      name: "Windmills & Ramparts walk",         time: "45-60 min",   price: 0,  desc: "Scenic walk past historic windmills, room to run." },
-          { id: "bru-zand-market",    name: "'t Zand Saturday Market",           time: "30-45 min",   price: 0,  desc: "Local market — produce, cheese, crafts (Saturdays only)." },
-          { id: "bru-canals",         name: "Canal-side wandering",              time: "flexible",    price: 0,  desc: "Bruges is built for getting lost — every corner is a postcard." },
-          { id: "bru-church-our-lady",name: "Church of Our Lady",                time: "30 min",      price: 6,  desc: "Houses Michelangelo's Madonna sculpture." },
-          { id: "bru-boat",           name: "Canal Boat Tour",                   time: "30 min",      price: 12, desc: "Short, kid-friendly ride through the canals." },
-          { id: "bru-frietmuseum",    name: "Frietmuseum",                       time: "1h",          price: 12, desc: "Quirky museum dedicated to Belgian fries." },
-          { id: "bru-chocostory",     name: "Choco-Story Museum",                time: "1-1.5h",      price: 13, desc: "Chocolate history with a praline demo." },
-          { id: "bru-belfry",         name: "Belfry of Bruges",                  time: "45-60 min",   price: 14, desc: "366 steps for a panoramic UNESCO-tower view." },
-          { id: "bru-halve-maan",     name: "De Halve Maan Brewery Tour",        time: "1h",          price: 16, desc: "Working city-centre brewery, book ahead." },
-          { id: "bru-historium",      name: "Historium Bruges",                  time: "1-1.5h",      price: 17, desc: "Step into Bruges' medieval Golden Age." },
-          { id: "bru-seapark",        name: "Boudewijn Seapark",                 time: "half-full day",price: 30, desc: "Rides + waterpark; mixed reviews on price/upkeep." },
+          { id: "bru-markt",           name: "Markt (Market Square)",              time: "30-45 min",    price: 0,  desc: "Heart of Bruges, guild houses and the Belfry tower." },
+          { id: "bru-burg",            name: "Burg Square",                        time: "20-30 min",    price: 0,  desc: "Ornate square next to the Markt, historic city hall." },
+          { id: "bru-holyblood",       name: "Basilica of the Holy Blood (entry)", time: "20-30 min",    price: 0,  desc: "12th-century chapel, free to step inside." },
+          { id: "bru-beguinage",       name: "Beguinage (Begijnhof)",              time: "30-45 min",    price: 0,  desc: "Tranquil UNESCO courtyard, swans and whitewashed houses." },
+          { id: "bru-minnewater",      name: "Minnewater Park (Lake of Love)",     time: "30-60 min",    price: 0,  desc: "Picnic spot with swans — kids love feeding them." },
+          { id: "bru-windmills",       name: "Windmills & Ramparts walk",          time: "45-60 min",    price: 0,  desc: "Scenic walk past historic windmills, room to run." },
+          { id: "bru-zand-market",     name: "'t Zand Saturday Market",            time: "30-45 min",    price: 0,  desc: "Local market — produce, cheese, crafts (Saturdays only)." },
+          { id: "bru-canals",          name: "Canal-side wandering",               time: "flexible",     price: 0,  desc: "Bruges is built for getting lost — every corner is a postcard." },
+          { id: "bru-church-our-lady", name: "Church of Our Lady",                 time: "30 min",       price: 6,  desc: "Houses Michelangelo's Madonna sculpture." },
+          { id: "bru-boat",            name: "Canal Boat Tour",                    time: "30 min",       price: 12, desc: "Short, kid-friendly ride through the canals." },
+          { id: "bru-frietmuseum",     name: "Frietmuseum",                        time: "1h",           price: 12, desc: "Quirky museum dedicated to Belgian fries." },
+          { id: "bru-chocostory",      name: "Choco-Story Museum",                 time: "1-1.5h",       price: 13, desc: "Chocolate history with a praline demo." },
+          { id: "bru-belfry",          name: "Belfry of Bruges",                   time: "45-60 min",    price: 14, desc: "366 steps for a panoramic UNESCO-tower view." },
+          { id: "bru-halve-maan",      name: "De Halve Maan Brewery Tour",         time: "1h",           price: 16, desc: "Working city-centre brewery, book ahead." },
+          { id: "bru-historium",       name: "Historium Bruges",                   time: "1-1.5h",       price: 17, desc: "Step into Bruges' medieval Golden Age." },
+          { id: "bru-seapark",         name: "Boudewijn Seapark",                  time: "half-full day", price: 30, desc: "Rides + waterpark; mixed reviews on price/upkeep." },
         ],
       },
       ghent: {
@@ -91,19 +118,19 @@
         itinerary:
           "Compact ~15-20 min loop: Gravensteen → Graslei/Korenlei → St. Michael's Bridge → St. Nicholas → Graffiti Street → Belfry.",
         places: [
-          { id: "ghe-korenlei",   name: "Korenlei & Graslei",                  time: "30-45 min",  price: 0,    desc: "Postcard riverside streets along the Leie." },
-          { id: "ghe-stmichaels", name: "St. Michael's Bridge",                time: "15-20 min",  price: 0,    desc: "Iconic view of the three towers — best at sunset." },
-          { id: "ghe-graffiti",   name: "Werregarenstraat (Graffiti Street)",  time: "15-30 min",  price: 0,    desc: "Legal graffiti alley — kids can spray their own mark." },
-          { id: "ghe-stnicholas", name: "St. Nicholas' Cathedral",             time: "20-30 min",  price: 0,    desc: "13th-century church; cafe with kids' play area next door." },
-          { id: "ghe-stbavo",     name: "St. Bavo's Cathedral (nave)",         time: "30 min",     price: 0,    desc: "Free entry to the main Gothic cathedral." },
+          { id: "ghe-korenlei",    name: "Korenlei & Graslei",                 time: "30-45 min",  price: 0,    desc: "Postcard riverside streets along the Leie." },
+          { id: "ghe-stmichaels",  name: "St. Michael's Bridge",               time: "15-20 min",  price: 0,    desc: "Iconic view of the three towers — best at sunset." },
+          { id: "ghe-graffiti",    name: "Werregarenstraat (Graffiti Street)",  time: "15-30 min",  price: 0,    desc: "Legal graffiti alley — kids can spray their own mark." },
+          { id: "ghe-stnicholas",  name: "St. Nicholas' Cathedral",            time: "20-30 min",  price: 0,    desc: "13th-century church; cafe with kids' play area next door." },
+          { id: "ghe-stbavo",      name: "St. Bavo's Cathedral (nave)",        time: "30 min",     price: 0,    desc: "Free entry to the main Gothic cathedral." },
           { id: "ghe-blaarmeersen",name: "Blaarmeersen Recreation Area",       time: "half day",   price: 0,    desc: "Lake, beach and play areas, free to enter." },
-          { id: "ghe-wander",     name: "City wandering (Fosfar Dragon app)",  time: "flexible",   price: 0,    desc: "Free app turns the old town into a kids' game." },
-          { id: "ghe-boat",       name: "Boat Tour (medieval Ghent)",          time: "30-45 min",  price: 10,   desc: "See the old town from the water." },
-          { id: "ghe-altarpiece", name: "Ghent Altarpiece (Mystic Lamb)",      time: "30-60 min",  price: 12.5, desc: "Van Eyck's masterpiece; kids' AR tour available (6-10y)." },
-          { id: "ghe-design",     name: "Design Museum Ghent",                 time: "1-1.5h",     price: 12,   desc: "Hands-on for kids — Lego corner, Playmobil hunt (verify reopened)." },
-          { id: "ghe-stam",       name: "STAM (City Museum)",                  time: "1-1.5h",     price: 13,   desc: "Interactive history — walk-on aerial city map, Lego corner." },
-          { id: "ghe-belfry",     name: "Belfry of Ghent",                     time: "45-60 min",  price: 13,   desc: "Panoramic tower views over the old town." },
-          { id: "ghe-gravensteen",name: "Gravensteen Castle",                  time: "1.5-2h",     price: 14,   desc: "Europe's only city-centre medieval castle; audio guide 9+." },
+          { id: "ghe-wander",      name: "City wandering (Fosfar Dragon app)", time: "flexible",   price: 0,    desc: "Free app turns the old town into a kids' game." },
+          { id: "ghe-boat",        name: "Boat Tour (medieval Ghent)",         time: "30-45 min",  price: 10,   desc: "See the old town from the water." },
+          { id: "ghe-altarpiece",  name: "Ghent Altarpiece (Mystic Lamb)",     time: "30-60 min",  price: 12.5, desc: "Van Eyck's masterpiece; kids' AR tour available (6-10y)." },
+          { id: "ghe-design",      name: "Design Museum Ghent",                time: "1-1.5h",     price: 12,   desc: "Hands-on for kids — Lego corner, Playmobil hunt (verify reopened)." },
+          { id: "ghe-stam",        name: "STAM (City Museum)",                 time: "1-1.5h",     price: 13,   desc: "Interactive history — walk-on aerial city map, Lego corner." },
+          { id: "ghe-belfry",      name: "Belfry of Ghent",                    time: "45-60 min",  price: 13,   desc: "Panoramic tower views over the old town." },
+          { id: "ghe-gravensteen", name: "Gravensteen Castle",                 time: "1.5-2h",     price: 14,   desc: "Europe's only city-centre medieval castle; audio guide 9+." },
         ],
       },
       brussels: {
@@ -132,12 +159,12 @@
         itinerary:
           "Town centre (Notre Dame, bridge, riverside) → drive up to Citadel (free parking) → playground + AR tour → optional boat ride.",
         places: [
-          { id: "din-notredame",    name: "Notre Dame de Dinant",       time: "20-30 min",  price: 0,  desc: "13th-century Gothic church below the citadel." },
-          { id: "din-bridge",       name: "Charles de Gaulle Bridge",   time: "10-15 min",  price: 0,  desc: "Best photo spot for the citadel + church view." },
-          { id: "din-riverside",    name: "Riverside walk (Meuse)",     time: "30-45 min",  price: 0,  desc: "Easy flat walk, room for kids to run." },
-          { id: "din-citadel-view", name: "Citadel exterior view",      time: "15-20 min",  price: 0,  desc: "Dramatic clifftop fortress view from the town." },
-          { id: "din-citadel",      name: "Citadel of Dinant",          time: "1.5h",       price: 14, desc: "1,000 yrs of history + HistoPad AR tour + playground (cable car closed — drive up)." },
-          { id: "din-boat",         name: "Boat Tour on the Meuse",     time: "45-60 min",  price: 11, desc: "River views of the citadel from below." },
+          { id: "din-notredame",    name: "Notre Dame de Dinant",     time: "20-30 min",  price: 0,  desc: "13th-century Gothic church below the citadel." },
+          { id: "din-bridge",       name: "Charles de Gaulle Bridge", time: "10-15 min",  price: 0,  desc: "Best photo spot for the citadel + church view." },
+          { id: "din-riverside",    name: "Riverside walk (Meuse)",   time: "30-45 min",  price: 0,  desc: "Easy flat walk, room for kids to run." },
+          { id: "din-citadel-view", name: "Citadel exterior view",    time: "15-20 min",  price: 0,  desc: "Dramatic clifftop fortress view from the town." },
+          { id: "din-citadel",      name: "Citadel of Dinant",        time: "1.5h",       price: 14, desc: "1,000 yrs of history + HistoPad AR tour + playground (cable car closed — drive up)." },
+          { id: "din-boat",         name: "Boat Tour on the Meuse",   time: "45-60 min",  price: 11, desc: "River views of the citadel from below." },
         ],
       },
       luxembourg: {
@@ -150,7 +177,7 @@
           { id: "lux-corniche",       name: "Chemin de la Corniche",             time: "30-45 min",  price: 0,  desc: "\"Europe's most beautiful balcony\" — valley views." },
           { id: "lux-oldtown",        name: "Old Town (Upper & Lower)",           time: "1-2h",       price: 0,  desc: "UNESCO old town, steep streets + free elevator." },
           { id: "lux-grund",          name: "Grund (lower town)",                 time: "30-45 min",  price: 0,  desc: "Picturesque riverside district below the cliffs." },
-          { id: "lux-petrusse",       name: "Pétrusse Valley",                   time: "45-60 min",  price: 0,  desc: "Walking paths and playgrounds in a green valley." },
+          { id: "lux-petrusse",       name: "Pétrusse Valley",              time: "45-60 min",  price: 0,  desc: "Walking paths and playgrounds in a green valley." },
           { id: "lux-kinnekswiss",    name: "Kinnekswiss Playground",             time: "30-45 min",  price: 0,  desc: "Popular green-space playground for kids." },
           { id: "lux-placedeparis",   name: "Place de Paris",                     time: "15-20 min",  price: 0,  desc: "Quirky square with statues and street art." },
           { id: "lux-walkingtour",    name: "Free Walking Tour",                  time: "~2h",        price: 0,  desc: "Local guides share legends and history." },
@@ -186,15 +213,11 @@
           try {
             const val = localStorage.getItem(`skipped:${key}`);
             sk[key] = new Set(val ? JSON.parse(val) : []);
-          } catch {
-            sk[key] = new Set();
-          }
+          } catch { sk[key] = new Set(); }
           try {
             const val = localStorage.getItem(`visited:${key}`);
             vi[key] = new Set(val ? JSON.parse(val) : []);
-          } catch {
-            vi[key] = new Set();
-          }
+          } catch { vi[key] = new Set(); }
         }
         setSkipped(sk);
         setVisited(vi);
@@ -202,11 +225,7 @@
       }, []);
 
       const persist = useCallback((kind, cityKey, set) => {
-        try {
-          localStorage.setItem(`${kind}:${cityKey}`, JSON.stringify([...set]));
-        } catch {
-          // best-effort; ignore failures (e.g. private browsing storage full)
-        }
+        try { localStorage.setItem(`${kind}:${cityKey}`, JSON.stringify([...set])); } catch {}
       }, []);
 
       const toggleSkip = (cityKey, placeId) => {
@@ -313,9 +332,7 @@
 
           <div className="flex items-center gap-2 mb-6 px-3 py-2 rounded-md bg-white border border-slate-200">
             <Wallet size={16} className="text-amber-700 shrink-0" />
-            <span className="font-body text-sm text-slate-500">
-              Planned spend across all stops
-            </span>
+            <span className="font-body text-sm text-slate-500">Planned spend across all stops</span>
             <span className="font-mono text-sm font-medium ml-auto">€{tripTotal.toFixed(2)}</span>
           </div>
 
@@ -425,7 +442,7 @@
           {skippedPlaces.length > 0 && (
             <CollapsibleSection
               title={`Skipped (${skippedPlaces.length})`}
-              icon={<X size={14} className="text-slate-500" />}
+              icon={<XIcon size={14} className="text-slate-500" />}
               open={!!openSection.skipped}
               onToggle={() => onToggleSection("skipped")}
               extra={
@@ -439,15 +456,10 @@
             >
               <div className="space-y-2">
                 {skippedPlaces.map((p) => (
-                  <div
-                    key={p.id}
-                    className="flex items-center justify-between gap-2 py-1.5 px-2 rounded bg-slate-100"
-                  >
+                  <div key={p.id} className="flex items-center justify-between gap-2 py-1.5 px-2 rounded bg-slate-100">
                     <div className="min-w-0">
                       <p className="font-body text-sm text-slate-500 truncate">{p.name}</p>
-                      <p className="font-mono text-xs text-slate-400">
-                        {fmtPrice(p.price)} · {p.time}
-                      </p>
+                      <p className="font-mono text-xs text-slate-400">{fmtPrice(p.price)} · {p.time}</p>
                     </div>
                     <button
                       onClick={() => onToggleSkip(p.id)}
@@ -485,20 +497,16 @@
             }`}
             aria-hidden="true"
           />
-          <div
-            className={`mb-3 rounded-lg border transition-opacity ${
-              isVisited ? "opacity-60 border-slate-200 bg-slate-100" : "border-slate-200 bg-white"
-            }`}
-          >
+          <div className={`mb-3 rounded-lg border transition-opacity ${
+            isVisited ? "opacity-60 border-slate-200 bg-slate-100" : "border-slate-200 bg-white"
+          }`}>
             <button
               onClick={() => setExpanded((v) => !v)}
               aria-expanded={expanded}
               className="w-full text-left px-3 py-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-lg"
             >
               <div className="flex items-start justify-between gap-2">
-                <h3 className="font-body font-medium text-sm leading-snug text-slate-900">
-                  {place.name}
-                </h3>
+                <h3 className="font-body font-medium text-sm leading-snug text-slate-900">{place.name}</h3>
                 <span className={`font-mono text-xs shrink-0 ${isFree ? "text-emerald-700" : "text-amber-700"}`}>
                   {fmtPrice(place.price)}
                 </span>
@@ -515,7 +523,6 @@
             {expanded && (
               <div className="px-3 pb-3 pt-1 border-t border-slate-100">
                 <p className="font-body text-sm text-slate-700 leading-relaxed mb-3">{place.desc}</p>
-
                 <a
                   href={mapsUrl}
                   target="_blank"
@@ -525,7 +532,6 @@
                   <MapPin size={13} className="text-red-600" /> Open in Google Maps
                   <ExternalLink size={11} className="text-slate-400" />
                 </a>
-
                 <div className="flex items-center gap-2">
                   <button
                     onClick={onToggleVisited}
@@ -542,7 +548,7 @@
                     onClick={onSkip}
                     className="flex items-center gap-1 font-mono text-xs px-2 py-1 rounded border border-slate-200 text-slate-500 hover:border-red-400 hover:text-red-600 ml-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                   >
-                    <X size={12} /> Skip
+                    <XIcon size={12} /> Skip
                   </button>
                 </div>
               </div>
